@@ -7,7 +7,7 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | Epic | Fait | Partiel | À faire |
 |---|---|---|---|
 | E0 — Initialisation | 2/2 | 0 | 0 |
-| E1 — Détection de l'environnement | 0/3 | 0 | 3 |
+| E1 — Détection de l'environnement | 3/3 | 0 | 0 |
 | E2 — Écran virtuel étendu | 0/3 | 0 | 3 |
 | E3 — Repli : écran isolé | 0/2 | 0 | 2 |
 | E4 — Serveur VNC | 0/3 | 0 | 3 |
@@ -18,7 +18,7 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E9 — Sécurité | 0/2 | 0 | 2 |
 | E10 — Tests et compatibilité | 0/4 | 0 | 4 |
 | E11 — Documentation et distribution | 0/3 | 0 | 3 |
-| **Total** | **2/29** | **0** | **27** |
+| **Total** | **5/29** | **0** | **24** |
 
 ## Epic E0 — Initialisation
 
@@ -37,17 +37,17 @@ GitHub Actions : lint Python, `pytest` sur la logique pure (pas besoin d'un vrai
 ### HOST-010 — Détecter les outils système requis — P0
 Vérifie la présence de `xrandr`, `cvt`, `x11vnc` (et `Xorg` + le pilote `dummy` pour le repli, HOST-030). Message clair et action bloquée si l'un manque ; jamais un plantage.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `pure/tools.py` (liste des outils requis, message d'installation avec le bon paquet apt, déduplication des paquets partagés) + `system/tools.py` (`shutil.which`, aucune exécution). `Xorg` séparé dans `FALLBACK_TOOLS` : son absence ne bloque que le repli (F03), pas l'écran étendu (F02). Testé avec de vrais binaires (`python3`) plutôt qu'un `shutil.which` simulé.
 
 ### HOST-011 — Détecter la session graphique (Xorg/Wayland) — P0
 Message explicite et renvoi vers les guides manuels du projet SecondScreen si la session n'est pas Xorg. Vérifier la méthode de détection sur les deux systèmes cibles : `$XDG_SESSION_TYPE` seul n'est pas garanti fiable sur toutes les configurations, à confirmer.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `pure/session.py` : croise `XDG_SESSION_TYPE`, `WAYLAND_DISPLAY` et `DISPLAY` (`WAYLAND_DISPLAY` prioritaire, car XWayland positionne souvent `DISPLAY` aussi). Testé avec la vraie session de la machine de développement (Debian, Xorg) et le comportement documenté de GNOME/Wayland. **Non confirmé** sur les deux systèmes cibles réels (Ubuntu, MX Linux) — reporté à HOST-101/HOST-102, aucun accès à ces machines dans cet environnement.
 
 ### HOST-012 — Analyser la sortie de `xrandr --query` — P0
 Fonction pure (aucun appel système dans cette fonction elle-même) : écran principal, sorties `VIRTUAL*` disponibles et leur état (`connected`/`disconnected`), position `+X+Y` d'une sortie déjà active. Fixtures de test à partir de plusieurs sorties réelles : avec sortie virtuelle (Intel/AMD), sans (NVIDIA propriétaire), une sortie déjà positionnée.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `pure/xrandr.py` + `system/xrandr.py`. Fixture **réellement capturée** sur la machine de développement (Debian, GPU Intel, aucune sortie `VIRTUAL*`) ; fixtures « sortie virtuelle disponible » et « déjà positionnée » **représentatives** du format documenté dans `GUIDE_UBUNTU.md` (pas recapturées sur du matériel réel ici, aucun GPU disponible n'exposant de sortie `VIRTUAL*`) — voir le commentaire en tête de `tests/test_xrandr.py` pour le détail honnête de la provenance. Tolérance aux lignes non reconnues testée explicitement (pas de plantage).
 
 ## Epic E2 — Écran virtuel étendu (F02)
 
