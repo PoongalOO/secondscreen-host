@@ -6,7 +6,9 @@ Voir [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md), [ISSUES.md](ISSUES.md) et [
 
 ## État
 
-Squelette de l'application (HOST-001) : une fenêtre GTK 3 vide se lance. Intégration continue en place (HOST-002) : lint et tests à chaque push/pull request. Pas encore de détection d'écran ni de serveur VNC.
+Fenêtre principale fonctionnelle (HOST-070/071/072) : détection au lancement (outils système, session Xorg/Wayland), bouton unique qui configure l'écran virtuel (étendu si une sortie `VIRTUAL*` est disponible, sinon repli sur un écran isolé), démarre/arrête `x11vnc`, affiche l'adresse/le port/le mot de passe une fois le serveur actif, panneau de détails techniques, avertissement de sécurité visible en permanence. La sortie choisie et le port sont mémorisés entre deux lancements (HOST-060), jamais le mot de passe. Intégration continue en place (HOST-002) : lint et tests à chaque push/pull request.
+
+Notes honnêtes sur cette V1 : les actions s'exécutent de façon synchrone (l'interface se fige brièvement, moins de 2 secondes en pratique) ; le nettoyage à la fermeture ne couvre que la fermeture normale de la fenêtre (le traitement systématique des plantages est HOST-080, pas encore fait).
 
 ## Installation (Ubuntu, MX Linux)
 

@@ -1,8 +1,6 @@
-"""Application GTK 3 et fenêtre principale (squelette, HOST-001).
-
-Les états réels (résultat de la détection, démarrage/arrêt du serveur,
-informations de connexion...) arriveront avec HOST-070 et les issues
-suivantes. Pour l'instant, l'activation affiche une fenêtre vide.
+"""Application GTK 3 (HOST-001) : construit la fenêtre principale
+(`secondscreen_host.ui.main_window.MainWindow`, HOST-070) et lance la
+boucle d'événements.
 """
 
 from __future__ import annotations
@@ -13,10 +11,9 @@ gi.require_version("Gtk", "3.0")
 
 from gi.repository import GLib, Gtk  # noqa: E402  (après gi.require_version)
 
+from secondscreen_host.ui.main_window import MainWindow  # noqa: E402
+
 APPLICATION_ID = "org.poongaloo.secondscreenhost"
-WINDOW_TITLE = "SecondScreenHost"
-DEFAULT_WIDTH = 480
-DEFAULT_HEIGHT = 320
 
 
 class Application(Gtk.Application):
@@ -36,8 +33,7 @@ class Application(Gtk.Application):
     def do_activate(self) -> None:
         window = self.props.active_window
         if window is None:
-            window = Gtk.ApplicationWindow(application=self, title=WINDOW_TITLE)
-            window.set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
+            window = MainWindow(application=self)
         window.present()
 
         if self._self_test:

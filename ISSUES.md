@@ -10,15 +10,15 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E1 — Détection de l'environnement | 3/3 | 0 | 0 |
 | E2 — Écran virtuel étendu | 3/3 | 0 | 0 |
 | E3 — Repli : écran isolé | 2/2 | 0 | 0 |
-| E4 — Serveur VNC | 2/3 | 1 | 0 |
-| E5 — Informations de connexion | 0/1 | 1 | 0 |
+| E4 — Serveur VNC | 3/3 | 0 | 0 |
+| E5 — Informations de connexion | 1/1 | 0 | 0 |
 | E6 — Persistance des réglages | 1/1 | 0 | 0 |
-| E7 — Interface GTK / UX | 0/3 | 0 | 3 |
+| E7 — Interface GTK / UX | 3/3 | 0 | 0 |
 | E8 — Fiabilité | 0/2 | 0 | 2 |
 | E9 — Sécurité | 0/2 | 0 | 2 |
 | E10 — Tests et compatibilité | 0/4 | 0 | 4 |
 | E11 — Documentation et distribution | 0/3 | 0 | 3 |
-| **Total** | **13/29** | **2** | **14** |
+| **Total** | **18/29** | **0** | **11** |
 
 ## Epic E0 — Initialisation
 
@@ -93,14 +93,14 @@ Lance le processus, détecte le succès ou l'échec réel (pas seulement « la c
 ### HOST-042 — Redemander le mot de passe à chaque démarrage — P0
 Champ de saisie masqué (pas en clair à l'écran), jamais écrit sur disque (CAHIER_DES_CHARGES.md, décision prise), effacé de la mémoire du processus dès que le serveur s'arrête — en notant explicitement la limite de Python sur ce point (une `str` n'est pas effaçable de façon garantie, contrairement au `CharArray` utilisé côté Android).
 
-**Statut : ✅ Fait pour la partie détention/effacement** — `pure/secret.py::Secret` : le mot de passe transite par un `bytearray` mutable, mis à zéro (vérifié par un test qui inspecte les octets, pas seulement l'état) dès `clear()` — appelé automatiquement par `X11VncProcess.stop()` (HOST-041). Jamais écrit sur disque de façon persistante (voir HOST-040 : seulement un fichier temporaire supprimé par x11vnc lui-même). Limite documentée dans le code, pas ignorée : Python ne garantit pas l'effacement d'une `str` sous-jacente. **Reste à faire** : le champ de saisie masqué lui-même est une question d'interface GTK, qui n'existe pas encore — ce sera fait avec HOST-070.
+**Statut : ✅ Fait** — `pure/secret.py::Secret` : le mot de passe transite par un `bytearray` mutable, mis à zéro (vérifié par un test qui inspecte les octets, pas seulement l'état) dès `clear()` — appelé automatiquement par `X11VncProcess.stop()` (HOST-041). Jamais écrit sur disque de façon persistante (voir HOST-040 : seulement un fichier temporaire supprimé par x11vnc lui-même). Limite documentée dans le code, pas ignorée : Python ne garantit pas l'effacement d'une `str` sous-jacente. Champ de saisie masqué ajouté avec HOST-070 (`_PasswordDialog`, `Gtk.Entry` avec `set_visibility(False)`), jamais pré-rempli.
 
 ## Epic E5 — Informations de connexion (F05)
 
 ### HOST-050 — Afficher IP/port/mot de passe copiables — P1
 Détection de l'adresse IP locale réelle (pas `127.0.0.1` ; gérer le cas de plusieurs interfaces réseau). Bouton « Copier » pour l'adresse et le port. Mot de passe masqué par défaut, révélable par l'utilisateur.
 
-**Statut : ✅ Fait pour la partie détection** — `pure/local_address.py` + `system/local_address.py`. Deux informations combinées : l'adresse que le système choisirait pour une connexion sortante (astuce socket UDP, aucune donnée réellement envoyée, aucun privilège requis) comme suggestion par défaut, et la liste de toutes les adresses IPv4 par interface (`ip -4 -o addr show`, nouvel outil ajouté à HOST-010) pour les cas à plusieurs interfaces. **Filtrage trouvé nécessaire en testant sur une vraie machine** : la machine de développement a une interface Wi-Fi normale, six ponts Docker et un VPN Tailscale — sans filtrer par nom d'interface, plusieurs adresses de ponts Docker (172.17-22.0.1, qui ressemblent à des adresses privées ordinaires) et l'adresse Tailscale auraient été proposées comme si elles étaient joignables depuis le réseau local, ce qui est faux. Fixture de test basée sur cette capture réelle plutôt qu'un exemple inventé. **Reste à faire (interface GTK, HOST-070)** : bouton « Copier », champ mot de passe masqué/révélable — F05 dans son ensemble suppose une fenêtre qui n'existe pas encore.
+**Statut : ✅ Fait** — `pure/local_address.py` + `system/local_address.py`. Deux informations combinées : l'adresse que le système choisirait pour une connexion sortante (astuce socket UDP, aucune donnée réellement envoyée, aucun privilège requis) comme suggestion par défaut, et la liste de toutes les adresses IPv4 par interface (`ip -4 -o addr show`, nouvel outil ajouté à HOST-010) pour les cas à plusieurs interfaces. **Filtrage trouvé nécessaire en testant sur une vraie machine** : la machine de développement a une interface Wi-Fi normale, six ponts Docker et un VPN Tailscale — sans filtrer par nom d'interface, plusieurs adresses de ponts Docker (172.17-22.0.1, qui ressemblent à des adresses privées ordinaires) et l'adresse Tailscale auraient été proposées comme si elles étaient joignables depuis le réseau local, ce qui est faux. Fixture de test basée sur cette capture réelle plutôt qu'un exemple inventé. Interface ajoutée avec HOST-070 : adresse et port affichés avec un bouton « Copier » chacun (`Gtk.Clipboard`), mot de passe masqué par défaut avec bouton « Afficher »/« Masquer ».
 
 ## Epic E6 — Persistance des réglages (F06)
 
@@ -114,17 +114,17 @@ Fichier de configuration utilisateur (répertoire de configuration XDG). Ne mém
 ### HOST-070 — Fenêtre principale avec état global — P0
 États explicites (aucun écran virtuel détecté / écran prêt, serveur arrêté / serveur actif avec adresse). Un bouton d'action principal dont le libellé change selon l'état (cahier des charges, UX V1).
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `pure/app_state.py` (les 3 états et le libellé du bouton, fonction pure testée) + `ui/main_window.py` (`MainWindow`) qui relie tout ce qui a été construit depuis E1 : détection au lancement (F01, outils + session), bouton unique qui appelle `system/orchestration.py::configure_screen` (choix automatique entre écran étendu F02 et repli isolé F03 selon ce que `xrandr` expose), démarre `x11vnc` via une boîte de dialogue de mot de passe (HOST-042), arrête proprement. Réutilise HOST-060 : sortie choisie et port mémorisés, jamais le mot de passe. **Vérifié avec un vrai clic** (`Gtk.Button.clicked()`, pas une simulation) sous Xvfb : un vrai clic sur « Configurer » déclenche la vraie détection `xrandr`, le vrai repli écran isolé, et échoue proprement (message clair, pas de plantage) faute de `pkexec` — `pkexec` lui-même s'est avéré fondamentalement incompatible avec les conteneurs Docker (« Refusing to render service to dead parents », bogue connu), confirmant que le point de test déjà utilisé ailleurs (`elevation_command=[]`) était le bon choix plutôt qu'une tentative de le contourner. **Limites assumées pour cette V1, documentées dans le code** : actions synchrones (l'interface se fige brièvement pendant l'opération, < 2 s mesuré) ; nettoyage à la fermeture limité à la fermeture normale (HOST-080 traitera les plantages/signaux).
 
 ### HOST-071 — Panneau de détails techniques — P2
 Résultat de la détection (HOST-010/011/012), sorties `xrandr`, dernière erreur : visible sur demande, pas imposé par défaut.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `pure/technical_details.py::format_technical_details`, dans un `Gtk.Expander` (replié par défaut). Réutilise directement les types déjà définis par HOST-010/011/012 (`ToolCheckResult`, `SessionInfo`, `XrandrQueryResult`) plutôt que de dupliquer leur structure.
 
 ### HOST-072 — Avertissement de sécurité visible — P0
 Rappel dans l'interface que VNC classique n'est pas chiffré, à réserver à un réseau local de confiance — cohérent avec l'avertissement déjà présent dans l'application Android SecondScreen.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `pure/security_notice.py`, affiché en permanence en haut de la fenêtre (pas seulement dans les détails techniques).
 
 ## Epic E8 — Fiabilité
 

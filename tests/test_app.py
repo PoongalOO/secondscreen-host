@@ -18,11 +18,8 @@ import pytest
 gi = pytest.importorskip("gi")
 gi.require_version("Gtk", "3.0")
 
-from secondscreen_host.ui.app import (  # noqa: E402
-    APPLICATION_ID,
-    WINDOW_TITLE,
-    Application,
-)
+from secondscreen_host.ui.app import APPLICATION_ID, Application  # noqa: E402
+from secondscreen_host.ui.main_window import WINDOW_TITLE  # noqa: E402
 
 
 def test_application_constructs_without_a_display() -> None:
