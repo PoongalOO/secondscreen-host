@@ -133,3 +133,39 @@ def test_an_unexpected_exception_is_caught_and_shown_not_raised(monkeypatch) -> 
         assert window._error_label.get_visible() is True
     finally:
         window.destroy()
+
+
+def test_do_start_server_refuses_an_empty_password(monkeypatch) -> None:
+    # HOST-091 : refusé aussi côté interface (en plus de HOST-041, à la
+    # source) — un `_PasswordDialog` factice répond OK avec un champ vide,
+    # sans dépendre d'une vraie interaction bloquante (Gtk.Dialog.run()).
+    import secondscreen_host.ui.main_window as main_window_module
+    from secondscreen_host.system.orchestration import ConfiguredScreen
+
+    class _FakeDialogAnsweringEmpty:
+        def __init__(self, _parent: Gtk.Window) -> None:
+            pass
+
+        def run(self) -> Gtk.ResponseType:
+            return Gtk.ResponseType.OK
+
+        def get_password(self) -> str:
+            return ""
+
+        def destroy(self) -> None:
+            pass
+
+    window = _make_window()
+    try:
+        window._configured_screen = ConfiguredScreen(
+            display=":0", clip=None, dummy_process=None, virtual_output_name=None
+        )
+        monkeypatch.setattr(main_window_module, "_PasswordDialog", _FakeDialogAnsweringEmpty)
+
+        window._do_start_server()
+
+        assert window._vnc is None
+        assert window._last_error is not None
+        assert "mot de passe" in window._last_error.lower()
+    finally:
+        window.destroy()

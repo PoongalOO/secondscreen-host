@@ -109,7 +109,6 @@ class MainWindow(Gtk.ApplicationWindow):
         self._xrandr_result = None
         self._configured_screen: ConfiguredScreen | None = None
         self._vnc: X11VncProcess | None = None
-        self._pending_secret: Secret | None = None
         self._last_error: str | None = None
         self._blocked_message: str | None = None
 

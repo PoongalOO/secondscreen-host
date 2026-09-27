@@ -85,6 +85,52 @@ def test_start_x11vnc_raises_before_touching_disk_if_secret_already_cleared() ->
         start_x11vnc(target=X11VncTarget(display=":99", clip=None), password=secret)
 
 
+def test_start_x11vnc_refuses_an_empty_password_without_touching_disk(monkeypatch) -> None:
+    # HOST-091 : refusé à la source, jamais seulement dans la boîte de
+    # dialogue GTK — aucune commande ne doit être lancée dans ce cas.
+    calls: list[object] = []
+    monkeypatch.setattr(
+        x11vnc_module.subprocess, "Popen", lambda *a, **k: calls.append((a, k)) or None
+    )
+
+    with pytest.raises(X11VncStartError, match="Un mot de passe est requis"):
+        start_x11vnc(target=X11VncTarget(display=":99", clip=None), password=Secret(""))
+
+    assert calls == []
+
+
+@pytest.mark.skipif(shutil.which("x11vnc") is None, reason="x11vnc non installé")
+def test_real_x11vnc_refuses_an_empty_password_file_rather_than_serving_without_auth() -> None:
+    # Vérité de terrain, sans simulation : x11vnc lui-même, et pas
+    # seulement notre propre garde-fou, ne doit jamais se rabattre
+    # silencieusement sur un serveur sans authentification.
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".pass") as handle:
+        handle.write("")
+        handle.flush()
+
+        result = subprocess.run(
+            [
+                "x11vnc",
+                "-display",
+                ":9999",
+                "-forever",
+                "-shared",
+                "-rfbport",
+                "5999",
+                "-passwdfile",
+                handle.name,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+
+    assert result.returncode != 0
+    assert "valid line" in (result.stdout + result.stderr).lower()
+
+
 def test_start_x11vnc_raises_a_clear_error_when_binary_is_missing(monkeypatch) -> None:
     def fake_popen(command, **kwargs):
         raise FileNotFoundError("x11vnc")

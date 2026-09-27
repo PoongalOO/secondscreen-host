@@ -183,6 +183,20 @@ def start_x11vnc(*, target: X11VncTarget, password: Secret, port: int = 5900) ->
             "Le mot de passe a déjà été effacé : impossible de démarrer le serveur."
         )
 
+    # HOST-091 : refusé ici, à la source, pas seulement dans la boîte de
+    # dialogue (HOST-070) — un futur appel direct à cette fonction, sans
+    # passer par l'interface, doit rester structurellement incapable de
+    # démarrer x11vnc sans mot de passe. Vérifié séparément (voir
+    # tests/test_system_x11vnc.py) : x11vnc lui-même refuse aussi un
+    # fichier de mot de passe vide plutôt que de servir sans
+    # authentification, mais on ne s'appuie pas uniquement sur son propre
+    # comportement pour une garantie qui nous revient.
+    if not password.reveal():
+        raise X11VncStartError(
+            "Un mot de passe est requis pour démarrer le serveur VNC : x11vnc ne "
+            "doit jamais être lancé sans authentification par défaut."
+        )
+
     password_file = _write_password_file(password.reveal())
     command = build_x11vnc_command(target=target, password_file_path=str(password_file), port=port)
 

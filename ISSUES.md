@@ -15,10 +15,10 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E6 — Persistance des réglages | 1/1 | 0 | 0 |
 | E7 — Interface GTK / UX | 3/3 | 0 | 0 |
 | E8 — Fiabilité | 2/2 | 0 | 0 |
-| E9 — Sécurité | 0/2 | 0 | 2 |
+| E9 — Sécurité | 2/2 | 0 | 0 |
 | E10 — Tests et compatibilité | 0/4 | 0 | 4 |
 | E11 — Documentation et distribution | 0/3 | 0 | 3 |
-| **Total** | **20/29** | **0** | **9** |
+| **Total** | **22/29** | **0** | **7** |
 
 ## Epic E0 — Initialisation
 
@@ -143,12 +143,12 @@ Toute commande externe (HOST-021, HOST-041) dont le code de retour est non nul, 
 ### HOST-090 — Ne jamais journaliser le mot de passe — P0
 Revue systématique du code et test qui recherche le mot de passe (un canari, comme `hygiene/SecretCanaryTest` du projet SecondScreen) dans toute sortie journalisée ou affichée en dehors du champ de saisie prévu.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — Revue statique (`tests/test_log_hygiene.py`) : aucun `print()` dans le code de l'application (vérifié, zéro résultat) ; la liste des appels à `Secret.reveal()` est figée à deux endroits revus (fichier de mot de passe temporaire, champ masqué GTK) — un nouvel appel ajouté ailleurs fait échouer ce test, comme rappel à revoir à la main. Canari à l'exécution (`tests/test_secret_canary.py`, même principe que `hygiene/SecretCanaryTest` du projet SecondScreen) : une valeur de mot de passe distinctive traverse un vrai `x11vnc` réel, recherchée ensuite dans la ligne de commande réelle du processus (`/proc/<pid>/cmdline`, ce que `ps(1)` montrerait), sa sortie capturée, un message d'échec, et le fichier de réglages — absente partout. **Nettoyage trouvé en cours de route** : un attribut `_pending_secret` déclaré mais jamais utilisé (reliquat d'une itération de conception antérieure) — supprimé.
 
 ### HOST-091 — Pas de serveur sans mot de passe par défaut — P1
 Le champ mot de passe est obligatoire par défaut avant de pouvoir démarrer le serveur. Si un mode sans mot de passe existe un jour, ce doit être un choix explicite et déconseillé dans l'interface, jamais le comportement par défaut.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — **Vrai bogue trouvé en vérifiant** : le refus d'un mot de passe vide n'était garanti que dans la boîte de dialogue (HOST-070) ; `system/x11vnc.py::start_x11vnc`, appelé directement, acceptait un `Secret("")` sans broncher. Corrigé à la source : refusé avant même d'écrire un fichier ou de lancer un processus, structurellement, pas seulement dans l'interface. Vérifié aussi que `x11vnc` lui-même refuse un fichier de mot de passe vide plutôt que de servir sans authentification (« cannot read a valid line from passwdfile », comportement réel confirmé, pas supposé) — mais notre propre garde-fou ne s'appuie pas uniquement sur ce comportement externe.
 
 ## Epic E10 — Tests et compatibilité
 
