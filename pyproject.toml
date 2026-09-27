@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "secondscreen-host"
+version = "0.1.0"
+description = "Configure un écran virtuel 1280x800 et un serveur VNC (x11vnc) pour SecondScreen."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+# PyGObject n'est volontairement pas listé ici : sur Ubuntu et MX Linux, on
+# l'installe via les paquets système (python3-gi, gir1.2-gtk-3.0), pas via
+# pip — voir README.md, section Installation, et AGENTS.md, « Contraintes
+# non négociables ».
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+secondscreen-host = "secondscreen_host.__main__:run"
+
+[tool.setuptools.packages.find]
+include = ["secondscreen_host*"]
