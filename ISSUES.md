@@ -9,7 +9,7 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E0 — Initialisation | 2/2 | 0 | 0 |
 | E1 — Détection de l'environnement | 3/3 | 0 | 0 |
 | E2 — Écran virtuel étendu | 3/3 | 0 | 0 |
-| E3 — Repli : écran isolé | 0/2 | 0 | 2 |
+| E3 — Repli : écran isolé | 2/2 | 0 | 0 |
 | E4 — Serveur VNC | 0/3 | 0 | 3 |
 | E5 — Informations de connexion | 0/1 | 0 | 1 |
 | E6 — Persistance des réglages | 0/1 | 0 | 1 |
@@ -18,7 +18,7 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E9 — Sécurité | 0/2 | 0 | 2 |
 | E10 — Tests et compatibilité | 0/4 | 0 | 4 |
 | E11 — Documentation et distribution | 0/3 | 0 | 3 |
-| **Total** | **8/29** | **0** | **21** |
+| **Total** | **10/29** | **0** | **19** |
 
 ## Epic E0 — Initialisation
 
@@ -71,12 +71,12 @@ Fonction pure : combine largeur, hauteur et position (HOST-021) en la chaîne at
 ### HOST-030 — Générer la configuration Xorg `dummy` — P1
 Fonction pure qui produit le contenu du fichier de configuration (mode 1280×800, pilote `dummy`), comparable à celui déjà écrit et vérifié dans `GUIDE_UBUNTU.md`/`GUIDE_MX_LINUX.md` du projet SecondScreen. Testée par comparaison de contenu, pas par exécution réelle de Xorg.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `pure/dummy_xorg.py`, structure identique aux guides (sections Device/Monitor/Screen, pilote `dummy`), testée par comparaison avec un fichier golden (`tests/fixtures/dummy_xorg_expected.conf`). Différence assumée avec les guides : la `Modeline` n'est pas figée en dur, elle vient du même `CvtMode` que HOST-020 (calculé une seule fois, réutilisé pour les deux) — utile car la version d'`xcvt` réellement installée ne produit pas exactement les mêmes valeurs que l'exemple des guides.
 
 ### HOST-031 — Démarrer/arrêter le second serveur X — P1
 Trouve un numéro d'affichage libre, lance `Xorg` avec la configuration (HOST-030), gère une éventuelle élévation de privilèges nécessaire. L'état affiché à l'utilisateur doit dire clairement que c'est un **second bureau séparé**, pas une extension du bureau existant (cahier des charges, F03).
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `pure/display_number.py` + `system/display_number.py` (numéro libre via `/tmp/.X<N>-lock`) ; `system/dummy_xorg.py` (démarrage via `pkexec`, détection de disponibilité par sondage du verrou plutôt qu'un délai fixe supposé suffisant, arrêt propre et idempotent). `pure/dummy_xorg.py::describe_dummy_screen` porte le message « second bureau séparé » exigé. `sudo` n'a volontairement pas été ajouté en repli de `pkexec` : sans terminal ni `SUDO_ASKPASS`, il resterait bloqué indéfiniment depuis une appli GTK — documenté dans le code plutôt que supposé fonctionner. **Vérifié avec un vrai `Xorg` + pilote `dummy`** dans un conteneur jetable exécuté en root (`elevation_command=[]`, contournant volontairement `pkexec` puisque déjà root) : démarrage réel, `xdpyinfo` confirme 1280×800, arrêt propre, aucun processus orphelin. **Non vérifié** : la boîte de dialogue `pkexec` elle-même (suppose un agent polkit + session graphique réels) — reporté à HOST-101/HOST-102. Un vrai bogue de conception trouvé et corrigé en écrivant les tests : `elevation_command=[]` (« explicitement aucune élévation ») était confondu avec « élévation indisponible » et levait une erreur à tort.
 
 ## Epic E4 — Serveur VNC (F04)
 
