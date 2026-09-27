@@ -10,10 +10,16 @@ Portée assumée pour cette V1 (à ne pas confondre avec un oubli) :
   s'exécutent de façon synchrone : l'interface se fige brièvement pendant
   l'opération (typiquement moins de 2 secondes, mesuré pendant les tests).
   Un traitement asynchrone est un vrai gain de confort, pas un prérequis
-  du cahier des charges pour la V1 ;
-- le nettoyage à la fermeture ne couvre que la fermeture normale de la
-  fenêtre (signal « destroy ») : le traitement systématique des plantages
-  et des signaux est le sujet dédié de HOST-080, pas de celui-ci.
+  du cahier des charges pour la V1.
+
+Nettoyage (HOST-080) : la fermeture normale (signal GTK « destroy ») et les
+signaux `SIGTERM`/`SIGINT` ainsi qu'un filet `atexit` (voir
+`secondscreen_host.system.cleanup`) appellent tous le même nettoyage
+idempotent — peu importe l'ordre ou le nombre de fois où il est déclenché.
+
+Toute exception inattendue pendant l'action du bouton principal est
+rattrapée et affichée plutôt que de laisser planter l'application
+(HOST-081) : voir `_on_primary_button_clicked`.
 """
 
 from __future__ import annotations
@@ -31,6 +37,7 @@ from secondscreen_host.pure.settings import Settings  # noqa: E402
 from secondscreen_host.pure.technical_details import format_technical_details  # noqa: E402
 from secondscreen_host.pure.tools import format_missing_tools_message, missing_tools  # noqa: E402
 from secondscreen_host.pure.x11vnc_command import X11VncTarget  # noqa: E402
+from secondscreen_host.system.cleanup import install_cleanup  # noqa: E402
 from secondscreen_host.system.local_address import (  # noqa: E402
     LocalAddressDetectionError,
     detect_connection_addresses,
@@ -108,6 +115,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self._build_widgets()
         self.connect("destroy", self._on_destroy)
+        install_cleanup(self._emergency_cleanup)
 
         self._run_initial_checks()
         self._refresh()
@@ -251,12 +259,23 @@ class MainWindow(Gtk.ApplicationWindow):
             screen_configured=self._configured_screen is not None,
             server_running=self._vnc is not None and self._vnc.is_running(),
         )
-        if status.state is AppState.NOT_CONFIGURED:
-            self._do_configure()
-        elif status.state is AppState.READY:
-            self._do_start_server()
-        else:
-            self._do_stop_server()
+        try:
+            if status.state is AppState.NOT_CONFIGURED:
+                self._do_configure()
+            elif status.state is AppState.READY:
+                self._do_start_server()
+            else:
+                self._do_stop_server()
+        except Exception as exc:
+            # Filet de sécurité (HOST-081) : chaque étape interne attrape
+            # déjà les échecs qu'elle anticipe (voir leurs propres
+            # try/except) et les transforme en message clair. Celui-ci
+            # n'est là que pour ce qui n'a pas été anticipé — un bogue, une
+            # exception d'un module tiers — pour ne jamais laisser une
+            # trace Python remonter jusqu'au terminal (ou nulle part du
+            # tout si l'application n'a pas été lancée depuis un terminal)
+            # à la place d'un message compréhensible dans l'interface.
+            self._last_error = f"Erreur inattendue : {exc}"
         self._refresh()
 
     def _do_configure(self) -> None:
@@ -350,7 +369,12 @@ class MainWindow(Gtk.ApplicationWindow):
     # Fermeture
 
     def _on_destroy(self, *_args) -> None:
-        # Nettoyage de la fermeture normale seulement : voir la docstring
-        # du module, le traitement systématique (plantage, signal) est
-        # HOST-080.
+        self._emergency_cleanup()
+
+    def _emergency_cleanup(self) -> None:
+        """Appelée à la fermeture normale (`_on_destroy`), sur `SIGTERM`/
+        `SIGINT`, ou via le filet `atexit` (voir `install_cleanup` dans
+        `__init__`, et `secondscreen_host.system.cleanup` pour pourquoi les
+        trois sont nécessaires). Idempotente : `teardown_screen` l'est déjà
+        (HOST-080)."""
         teardown_screen(self._configured_screen, self._vnc)

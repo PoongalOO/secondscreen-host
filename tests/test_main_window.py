@@ -108,3 +108,28 @@ def test_clicking_configure_for_real_surfaces_a_clear_error_without_crashing() -
         assert window._error_label.get_visible() is True
     finally:
         window.destroy()
+
+
+def test_an_unexpected_exception_is_caught_and_shown_not_raised(monkeypatch) -> None:
+    # HOST-081 : un bogue non anticipé (ici simulé) ne doit jamais faire
+    # remonter une exception Python hors du gestionnaire de clic — un vrai
+    # `.clicked()` qui lèverait romprait ce test lui-même.
+    import secondscreen_host.ui.main_window as main_window_module
+
+    window = _make_window()
+    try:
+        if window._blocked_message is not None:
+            pytest.skip(f"outils/session bloqués : {window._blocked_message}")
+
+        def _boom(**kwargs):
+            raise RuntimeError("bogue non anticipé, simulé pour le test")
+
+        monkeypatch.setattr(main_window_module, "query_xrandr", _boom)
+
+        window._primary_button.clicked()  # ne doit pas lever
+
+        assert window._last_error is not None
+        assert "bogue non anticipé" in window._last_error
+        assert window._error_label.get_visible() is True
+    finally:
+        window.destroy()

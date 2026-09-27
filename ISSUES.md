@@ -14,11 +14,11 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E5 — Informations de connexion | 1/1 | 0 | 0 |
 | E6 — Persistance des réglages | 1/1 | 0 | 0 |
 | E7 — Interface GTK / UX | 3/3 | 0 | 0 |
-| E8 — Fiabilité | 0/2 | 0 | 2 |
+| E8 — Fiabilité | 2/2 | 0 | 0 |
 | E9 — Sécurité | 0/2 | 0 | 2 |
 | E10 — Tests et compatibilité | 0/4 | 0 | 4 |
 | E11 — Documentation et distribution | 0/3 | 0 | 3 |
-| **Total** | **18/29** | **0** | **11** |
+| **Total** | **20/29** | **0** | **9** |
 
 ## Epic E0 — Initialisation
 
@@ -131,12 +131,12 @@ Rappel dans l'interface que VNC classique n'est pas chiffré, à réserver à un
 ### HOST-080 — Nettoyage systématique des processus — P0
 À la fermeture normale de l'application, sur erreur, et sur plantage (gestion de signal / `atexit`) : aucun `x11vnc` ni `Xorg` (HOST-031) ne doit survivre. Test qui le vérifie, pas seulement une relecture du code.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `system/cleanup.py::install_cleanup` : un seul nettoyage idempotent, appelé par la fermeture normale (déjà en place depuis HOST-070), par des gestionnaires `SIGTERM`/`SIGINT` explicites (sans eux, un signal termine Python immédiatement sans exécuter quoi que ce soit), et par un filet `atexit` (pour une exception Python non gérée qui remonterait jusqu'en haut de `main()`). Le gestionnaire de signal rétablit le comportement par défaut puis se re-signale lui-même après le nettoyage : le code de sortie reste celui, conventionnel, d'un arrêt par signal. **Vérifié par de vrais sous-processus et de vrais signaux envoyés depuis l'extérieur** (pas une simulation en mémoire) : le critère d'acceptation de l'issue elle-même — un vrai `Xorg` (écran isolé) et un vrai `x11vnc`, un vrai `SIGTERM` envoyé au processus parent, plus aucun des deux processus après coup, vérifié par l'OS (`os.kill(pid, 0)`), pas par relecture du code. Testé aussi pour `SIGINT` et la sortie normale (`atexit`), stable sur plusieurs exécutions.
 
 ### HOST-081 — Gestion des erreurs de commandes externes — P0
 Toute commande externe (HOST-021, HOST-041) dont le code de retour est non nul, ou dont la sortie ne correspond pas au format attendu, produit un message compréhensible dans l'interface. Jamais une exception non gérée qui ne serait visible que dans un terminal.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — la partie « code de retour non nul / sortie inattendue » était déjà couverte au fil des epics précédentes (chaque module `system/*` transforme ses échecs en exception typée avec un message clair : `XrandrQueryError`, `CvtError`, `DummyScreenStartError`, `ExtendedScreenConfigurationError`, `X11VncStartError`, `LocalAddressDetectionError`, regroupées par `ScreenConfigurationError` pour l'interface). Ce qui manquait : un filet de sécurité dans `ui/main_window.py::_on_primary_button_clicked` pour ce qui n'a pas été anticipé (un bogue, une exception d'un module tiers) — ajouté (`except Exception`, volontairement large et documenté comme tel), testé en simulant un échec d'un type non prévu et en vérifiant qu'il est affiché plutôt que de remonter.
 
 ## Epic E9 — Sécurité
 
