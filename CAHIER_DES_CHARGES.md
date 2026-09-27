@@ -33,6 +33,11 @@ Permettre de préparer et de lancer, en une action, un écran virtuel 1280×800 
 - **icône de zone de notification en V1** (voir « UX ») : la prise en charge des icônes système varie selon l'environnement de bureau (GNOME en particulier demande une extension) ; ce n'est pas un blocage pour l'objectif principal, donc reporté après une première version qui fonctionne en fenêtre simple ;
 - **empaquetage définitif** (`.deb`, AppImage...) : la V1 peut se lancer depuis les sources (environnement virtuel Python) ; le mode de distribution est une décision à part, une fois l'application utile.
 
+  **Décision prise (HOST-111)** : source + environnement virtuel reste le seul mode de distribution pour l'instant, même maintenant que le cœur fonctionnel de la V1 (F01-F06, E1-E10) est en place — parce que ce cœur n'a été vérifié que par des tests automatisés et un conteneur jetable, jamais encore sur un vrai PC Ubuntu ou MX Linux (HOST-101/HOST-102, toujours à faire). Empaqueter avant cette vérification figerait une distribution pour une application dont le fonctionnement réel reste à confirmer. À reprendre une fois HOST-101/HOST-102 faits, avec ces éléments déjà notés pour ce moment-là :
+  - `.deb` : le plus intégré à Ubuntu/MX Linux (gestion des dépendances système par `apt`), mais demande de maintenir un dépôt ou d'accepter une installation par fichier `.deb` téléchargé manuellement (pas de mise à jour automatique sans dépôt) ;
+  - AppImage : un seul fichier portable, mais empaqueterait aussi PyGObject/GTK (gros fichier) et devrait quand même s'appuyer sur les paquets système pour `xrandr`/`cvt`/`x11vnc`/`Xorg`, qu'une AppImage ne peut pas raisonnablement embarquer (ce sont des processus externes lancés, pas des bibliothèques liées, voir « Hors périmètre initial » plus haut) ;
+  - `pip`/environnement virtuel (déjà le cas aujourd'hui, voir README.md) : le plus simple à maintenir pour ce projet, mais suppose que l'utilisateur soit à l'aise avec une ligne de commande — justement ce que ce projet cherche à éviter à l'utilisateur final de SecondScreen (voir CAHIER_DES_CHARGES.md, « Contexte »).
+
 ## 4. Plateforme cible
 
 - Ubuntu LTS (22.04, 24.04) et MX Linux, en session **Xorg** (pas Wayland) ;

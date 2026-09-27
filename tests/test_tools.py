@@ -1,6 +1,7 @@
 """Tests de `secondscreen_host.pure.tools` (HOST-010)."""
 
 from secondscreen_host.pure.tools import (
+    FALLBACK_TOOLS,
     REQUIRED_TOOLS,
     RequiredTool,
     ToolCheckResult,
@@ -12,6 +13,13 @@ from secondscreen_host.pure.tools import (
 def test_required_tools_cover_xrandr_cvt_x11vnc_ip() -> None:
     names = {tool.name for tool in REQUIRED_TOOLS}
     assert names == {"xrandr", "cvt", "x11vnc", "ip"}
+
+
+def test_fallback_tools_cover_xorg_and_pkexec() -> None:
+    # HOST-110 : documentés dans README.md comme nécessaires seulement pour
+    # le repli écran isolé — cohérence à maintenir entre les deux.
+    names = {tool.name for tool in FALLBACK_TOOLS}
+    assert names == {"Xorg", "pkexec"}
 
 
 def test_tool_check_result_is_available() -> None:

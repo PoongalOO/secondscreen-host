@@ -17,8 +17,8 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E8 — Fiabilité | 2/2 | 0 | 0 |
 | E9 — Sécurité | 2/2 | 0 | 0 |
 | E10 — Tests et compatibilité | 1/4 | 0 | 3 |
-| E11 — Documentation et distribution | 0/3 | 0 | 3 |
-| **Total** | **23/29** | **0** | **6** |
+| E11 — Documentation et distribution | 3/3 | 0 | 0 |
+| **Total** | **26/29** | **0** | **3** |
 
 ## Epic E0 — Initialisation
 
@@ -177,15 +177,17 @@ Confirme que l'absence de sortie `VIRTUAL*` déclenche bien, et seulement dans c
 ### HOST-110 — README : installation et utilisation — P0
 Dépendances système à installer avant de lancer l'application, lancement depuis les sources (environnement virtuel Python).
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — **Vraie lacune trouvée en le vérifiant** : la section « Installation » ne listait que les paquets Python/GTK nécessaires pour développer, pas les outils système que l'application appelle réellement au fonctionnement (`xrandr`, `cvt`, `x11vnc`, `ip`) — quelqu'un qui suit le README à la lettre se serait heurté aux messages de HOST-010 sans savoir quoi installer à l'avance. Complétée, avec une séparation claire entre paquets toujours nécessaires et paquets nécessaires seulement pour le repli écran isolé (`xserver-xorg-core`, `xserver-xorg-video-dummy`, `policykit-1`). **Effet de bord trouvé en écrivant cette liste** : `pkexec`/`policykit-1`, indispensable au repli isolé, n'était pas vérifié par HOST-010 (`pure/tools.py`) — ajouté à `FALLBACK_TOOLS`, pour que la documentation et la détection au lancement restent cohérentes l'une avec l'autre.
 
 ### HOST-111 — Choisir et documenter le mode de distribution — P2
 `.deb`, AppImage, ou installation via `pip`/environnement virtuel uniquement : décision différée dans le cahier des charges (« Hors périmètre initial »), à reprendre ici une fois la V1 utile.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — Décision documentée dans CAHIER_DES_CHARGES.md, « Hors périmètre initial » : source + environnement virtuel reste le seul mode pour l'instant, explicitement **parce que** le cœur fonctionnel (F01-F06) n'a encore été vérifié que par des tests automatisés et des conteneurs jetables, jamais sur un vrai PC (HOST-101/HOST-102, toujours à faire) — empaqueter avant cette vérification figerait une distribution pour un fonctionnement réel encore à confirmer. Avantages/inconvénients de `.deb`/AppImage/`pip` notés pour la reprise de cette décision une fois HOST-101/HOST-102 faits.
 
 ### HOST-112 — Licence et notices — P2
 Fichier `LICENSE` et notices des dépendances tierces (PyGObject et ce qu'elle entraîne), sur le modèle de `LICENSE`/`NOTICE.md` du projet SecondScreen, sauf décision contraire.
+
+**Statut : ✅ Fait** — `LICENSE` (MIT, identique au projet SecondScreen). `NOTICE.md` : versions réellement vérifiées (`apt-cache policy`, `pip show`) plutôt que supposées, avec une distinction propre à ce projet (aucun binaire compilé, donc pas de catégorie « livré dans l'APK ») entre dépendance d'exécution (PyGObject/GTK 3, paquet système, jamais `pip`), dépendances de développement seulement (`pytest`, `ruff`), et outils système invoqués comme processus externes (`x11vnc`, `xrandr`, `Xorg`, `cvt`, `ip`, `pkexec` — ni liés, ni redistribués, listés par transparence).
 
 **Statut : ⬜ À faire**
 

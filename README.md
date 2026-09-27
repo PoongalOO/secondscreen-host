@@ -6,17 +6,43 @@ Voir [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md), [ISSUES.md](ISSUES.md) et [
 
 ## État
 
-Fenêtre principale fonctionnelle (HOST-070/071/072) : détection au lancement (outils système, session Xorg/Wayland), bouton unique qui configure l'écran virtuel (étendu si une sortie `VIRTUAL*` est disponible, sinon repli sur un écran isolé), démarre/arrête `x11vnc`, affiche l'adresse/le port/le mot de passe une fois le serveur actif, panneau de détails techniques, avertissement de sécurité visible en permanence. La sortie choisie et le port sont mémorisés entre deux lancements (HOST-060), jamais le mot de passe. Intégration continue en place (HOST-002) : lint et tests à chaque push/pull request.
+Fenêtre principale fonctionnelle (HOST-070/071/072) : détection au lancement (outils système, session Xorg/Wayland), bouton unique qui configure l'écran virtuel (étendu si une sortie `VIRTUAL*` est disponible, sinon repli sur un écran isolé), démarre/arrête `x11vnc`, affiche l'adresse/le port/le mot de passe une fois le serveur actif, panneau de détails techniques, avertissement de sécurité visible en permanence. La sortie choisie et le port sont mémorisés entre deux lancements (HOST-060), jamais le mot de passe. Nettoyage systématique des processus externes à la fermeture, sur `SIGTERM`/`SIGINT` et sur plantage (HOST-080). Intégration continue en place (HOST-002) : lint et tests à chaque push/pull request, y compris dans un environnement sans GTK ni aucun outil système (HOST-100).
 
-Notes honnêtes sur cette V1 : les actions s'exécutent de façon synchrone (l'interface se fige brièvement, moins de 2 secondes en pratique) ; le nettoyage à la fermeture ne couvre que la fermeture normale de la fenêtre (le traitement systématique des plantages est HOST-080, pas encore fait).
+Note honnête sur cette V1 : les actions s'exécutent de façon synchrone (l'interface se fige brièvement, moins de 2 secondes en pratique).
+
+Fonctionnement de bout en bout vérifié par des tests automatisés (conteneurs jetables), **pas encore sur un vrai PC Ubuntu ou MX Linux** (HOST-101/HOST-102, à faire — voir ISSUES.md). L'empaquetage (`.deb`/AppImage) reste volontairement différé jusque-là (décision documentée dans CAHIER_DES_CHARGES.md, « Hors périmètre initial », HOST-111) : seule l'installation depuis les sources ci-dessous est proposée pour l'instant.
 
 ## Installation (Ubuntu, MX Linux)
+
+### Paquets système
 
 PyGObject (les liaisons Python de GTK) s'installe par les paquets système, pas par `pip` : c'est la façon fiable de l'obtenir sur ces distributions, et `pip install PyGObject` demande par ailleurs les en-têtes de développement de GObject Introspection. Voir AGENTS.md, « Contraintes non négociables ».
 
 ```bash
 sudo apt install python3 python3-venv python3-gi gir1.2-gtk-3.0
 ```
+
+Toujours nécessaires en plus pour que l'application fonctionne (pas seulement pour la développer) — vérifiés au lancement par l'application elle-même (HOST-010), qui affiche un message clair et bloque l'action si l'un manque plutôt que de planter :
+
+```bash
+sudo apt install x11-xserver-utils xcvt x11vnc iproute2
+```
+
+- `x11-xserver-utils` fournit `xrandr` ;
+- `xcvt` fournit `cvt` — **paquet séparé** de `x11-xserver-utils` depuis Ubuntu 22.04/Debian récent, vérifié (bogue déjà rencontré et documenté dans `GUIDE_UBUNTU.md`/`GUIDE_MX_LINUX.md` du projet SecondScreen) ;
+- `x11vnc` sert l'écran en VNC (F04) ;
+- `iproute2` fournit `ip`, utilisé pour détecter l'adresse IP locale à afficher (HOST-050) — présent par défaut sur la quasi-totalité des installations, listé ici pour l'exhaustivité.
+
+Nécessaires **seulement** si aucune sortie `VIRTUAL*` n'est disponible sur votre carte graphique (repli « écran isolé », F03 — voir CAHIER_DES_CHARGES.md) :
+
+```bash
+sudo apt install xserver-xorg-core xserver-xorg-video-dummy policykit-1
+```
+
+- `xserver-xorg-core` (le binaire `Xorg`) et `xserver-xorg-video-dummy` (le pilote factice) pour le second serveur X ;
+- `policykit-1` fournit `pkexec`, utilisé pour obtenir les privilèges nécessaires à ce second serveur X (aucun mot de passe root permanent, une élévation ponctuelle seulement — voir CAHIER_DES_CHARGES.md, « Plateforme cible »).
+
+### Environnement virtuel Python
 
 Créer l'environnement virtuel avec `--system-site-packages` pour qu'il hérite de `python3-gi` installé au niveau système (sinon `import gi` échoue à l'intérieur du venv) :
 
@@ -68,3 +94,7 @@ ruff check .
 ```
 
 La CI (`.github/workflows/ci.yml`, HOST-002) exécute le lint et les tests à chaque push et pull request sur `main`, avec un rapport de tests publié en artefact.
+
+## Licence
+
+[MIT](LICENSE). Dépendances tierces documentées dans [NOTICE.md](NOTICE.md).

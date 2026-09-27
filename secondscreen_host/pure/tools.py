@@ -57,6 +57,11 @@ FALLBACK_TOOLS: tuple[RequiredTool, ...] = (
         package_hint="xserver-xorg-core xserver-xorg-video-dummy",
         reason="démarrer le second serveur X du repli « écran isolé »",
     ),
+    RequiredTool(
+        name="pkexec",
+        package_hint="policykit-1",
+        reason="obtenir les privilèges nécessaires au second serveur X du repli « écran isolé »",
+    ),
 )
 
 
