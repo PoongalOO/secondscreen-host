@@ -4,21 +4,23 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 
 ## Résumé
 
-| Epic | Fait | Partiel | À faire |
-|---|---|---|---|
-| E0 — Initialisation | 2/2 | 0 | 0 |
-| E1 — Détection de l'environnement | 3/3 | 0 | 0 |
-| E2 — Écran virtuel étendu | 3/3 | 0 | 0 |
-| E3 — Repli : écran isolé | 2/2 | 0 | 0 |
-| E4 — Serveur VNC | 3/3 | 0 | 0 |
-| E5 — Informations de connexion | 1/1 | 0 | 0 |
-| E6 — Persistance des réglages | 1/1 | 0 | 0 |
-| E7 — Interface GTK / UX | 3/3 | 0 | 0 |
-| E8 — Fiabilité | 2/2 | 0 | 0 |
-| E9 — Sécurité | 2/2 | 0 | 0 |
-| E10 — Tests et compatibilité | 1/4 | 0 | 3 |
-| E11 — Documentation et distribution | 3/3 | 0 | 0 |
-| **Total** | **26/29** | **0** | **3** |
+| Epic | Fait | Partiel | À faire | Hors de portée ici |
+|---|---|---|---|---|
+| E0 — Initialisation | 2/2 | 0 | 0 | 0 |
+| E1 — Détection de l'environnement | 3/3 | 0 | 0 | 0 |
+| E2 — Écran virtuel étendu | 3/3 | 0 | 0 | 0 |
+| E3 — Repli : écran isolé | 2/2 | 0 | 0 | 0 |
+| E4 — Serveur VNC | 3/3 | 0 | 0 | 0 |
+| E5 — Informations de connexion | 1/1 | 0 | 0 | 0 |
+| E6 — Persistance des réglages | 1/1 | 0 | 0 | 0 |
+| E7 — Interface GTK / UX | 3/3 | 0 | 0 | 0 |
+| E8 — Fiabilité | 2/2 | 0 | 0 | 0 |
+| E9 — Sécurité | 2/2 | 0 | 0 | 0 |
+| E10 — Tests et compatibilité | 1/4 | 0 | 0 | 3 |
+| E11 — Documentation et distribution | 3/3 | 0 | 0 | 0 |
+| **Total** | **26/29** | **0** | **0** | **3** |
+
+« Hors de portée ici » : bloqué par l'absence de matériel réel (PC Ubuntu/MX Linux, carte graphique NVIDIA) dans cet environnement de développement — pas abandonné, pas une décision de conception, juste en attente de quelqu'un qui a accès à ce matériel. Voir HOST-101, HOST-102, HOST-103.
 
 ## Epic E0 — Initialisation
 
@@ -160,17 +162,17 @@ Rassemble et maintient les tests unitaires de HOST-012, HOST-020, HOST-022, HOST
 ### HOST-101 — Test sur PC Ubuntu réel — P0
 Écran étendu (F02) **et** repli isolé (F03), les deux, avec une vraie tablette SecondScreen qui se connecte au résultat.
 
-**Statut : ⬜ À faire**
+**Statut : 🚫 Hors de portée ici** — nécessite un vrai PC Ubuntu et une vraie tablette SecondScreen (GT-P5110) sur le même réseau local ; aucun des deux n'est disponible dans cet environnement de développement (conteneurs jetables seulement). Tout ce qui pouvait être vérifié sans ce matériel l'a été ailleurs (voir HOST-021, HOST-031, HOST-041, HOST-070 : vraies commandes `xrandr`/`cvt`/`Xorg`/`x11vnc` dans des conteneurs jetables). Reste à faire par quelqu'un qui a accès à ce PC.
 
 ### HOST-102 — Test sur PC MX Linux réel — P0
 Idem HOST-101, sur MX Linux.
 
-**Statut : ⬜ À faire**
+**Statut : 🚫 Hors de portée ici** — même raison que HOST-101, avec un vrai PC MX Linux.
 
 ### HOST-103 — Test avec pilote NVIDIA propriétaire — P1
 Confirme que l'absence de sortie `VIRTUAL*` déclenche bien, et seulement dans ce cas, le repli vers l'écran isolé (pas de faux positif qui proposerait le repli alors qu'une sortie virtuelle existe, ni l'inverse).
 
-**Statut : ⬜ À faire**
+**Statut : 🚫 Hors de portée ici** — nécessite une carte graphique NVIDIA avec le pilote propriétaire ; absente de cet environnement (GPU Intel sur la machine de développement, voir `tests/fixtures/xrandr_real_intel_no_virtual.txt`, qui couvre déjà le cas « aucune sortie VIRTUAL* » mais sur un pilote différent). La logique elle-même (HOST-012, `virtual_candidates`) ne dépend pas du fabricant du pilote, seulement de la présence ou non d'une ligne `VIRTUAL*` dans `xrandr --query` — mais la confirmer spécifiquement sur du matériel NVIDIA réel demande cette carte.
 
 ## Epic E11 — Documentation et distribution
 
