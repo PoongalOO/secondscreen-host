@@ -11,7 +11,7 @@ import gi
 
 gi.require_version("Gtk", "3.0")
 
-from gi.repository import Gtk, GLib  # noqa: E402  (après gi.require_version)
+from gi.repository import GLib, Gtk  # noqa: E402  (après gi.require_version)
 
 APPLICATION_ID = "org.poongaloo.secondscreenhost"
 WINDOW_TITLE = "SecondScreenHost"
@@ -33,7 +33,7 @@ class Application(Gtk.Application):
         super().__init__(application_id=APPLICATION_ID)
         self._self_test = self_test
 
-    def do_activate(self) -> None:  # noqa: N802 (nom imposé par GTK)
+    def do_activate(self) -> None:
         window = self.props.active_window
         if window is None:
             window = Gtk.ApplicationWindow(application=self, title=WINDOW_TITLE)

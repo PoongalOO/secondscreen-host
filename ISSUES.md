@@ -6,7 +6,7 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 
 | Epic | Fait | Partiel | À faire |
 |---|---|---|---|
-| E0 — Initialisation | 1/2 | 0 | 1 |
+| E0 — Initialisation | 2/2 | 0 | 0 |
 | E1 — Détection de l'environnement | 0/3 | 0 | 3 |
 | E2 — Écran virtuel étendu | 0/3 | 0 | 3 |
 | E3 — Repli : écran isolé | 0/2 | 0 | 2 |
@@ -18,7 +18,7 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E9 — Sécurité | 0/2 | 0 | 2 |
 | E10 — Tests et compatibilité | 0/4 | 0 | 4 |
 | E11 — Documentation et distribution | 0/3 | 0 | 3 |
-| **Total** | **1/29** | **0** | **28** |
+| **Total** | **2/29** | **0** | **27** |
 
 ## Epic E0 — Initialisation
 
@@ -30,7 +30,7 @@ Structure de paquets (logique pure séparée du code GTK, voir AGENTS.md), point
 ### HOST-002 — CI : lint et tests unitaires — P1
 GitHub Actions : lint Python, `pytest` sur la logique pure (pas besoin d'un vrai serveur X ni d'un environnement graphique pour ces tests-là). Artefact de rapport de tests.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `.github/workflows/ci.yml` : `ubuntu-22.04` (version minimale visée), installation des paquets système GTK 3, `ruff check` puis `pytest --junitxml`, rapport publié en artefact (`actions/upload-artifact`, `if: always()` pour l'avoir même en cas d'échec). Toute la chaîne testée telle quelle dans un conteneur Ubuntu 22.04 jetable avant de l'écrire dans le workflow : lint propre, 6/6 tests, `report.xml` généré correctement. Non vérifié : le run réel sur GitHub Actions lui-même (nécessite le push).
 
 ## Epic E1 — Détection de l'environnement (F01)
 

@@ -6,7 +6,7 @@ Voir [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md), [ISSUES.md](ISSUES.md) et [
 
 ## État
 
-Squelette de l'application (HOST-001) : une fenêtre GTK 3 vide se lance. Pas encore de détection d'écran ni de serveur VNC.
+Squelette de l'application (HOST-001) : une fenêtre GTK 3 vide se lance. Intégration continue en place (HOST-002) : lint et tests à chaque push/pull request. Pas encore de détection d'écran ni de serveur VNC.
 
 ## Installation (Ubuntu, MX Linux)
 
@@ -21,8 +21,11 @@ Créer l'environnement virtuel avec `--system-site-packages` pour qu'il hérite 
 ```bash
 python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
+pip install --upgrade pip
 pip install -e .[dev]
 ```
+
+`pip install --upgrade pip` n'est pas cosmétique : sans lui, la version de `pip` fournie par Ubuntu 22.04 (22.0.2) échoue à installer le projet en mode éditable avec l'erreur *« build backend is missing the 'build_editable' hook »* (vérifié).
 
 ## Lancer l'application
 
@@ -44,3 +47,11 @@ Les tests qui utilisent GTK (`tests/test_app.py`) ne testent que la construction
 ./scripts/gtk-smoke-test.sh          # ubuntu:22.04 par défaut
 ./scripts/gtk-smoke-test.sh debian:trixie
 ```
+
+## Lint
+
+```bash
+ruff check .
+```
+
+La CI (`.github/workflows/ci.yml`, HOST-002) exécute le lint et les tests à chaque push et pull request sur `main`, avec un rapport de tests publié en artefact.

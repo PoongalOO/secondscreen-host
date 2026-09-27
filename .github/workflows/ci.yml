@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-test:
+    # Version minimale visée par le projet (voir AGENTS.md) : le comportement
+    # vérifié ici est celui de l'installation réelle sur cette distribution,
+    # pas celui, potentiellement différent, du Python isolé fourni par
+    # actions/setup-python.
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer les paquets système (Python, GTK 3)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq python3 python3-venv python3-gi gir1.2-gtk-3.0
+
+      - name: Créer l'environnement virtuel et installer le projet
+        run: |
+          python3 -m venv --system-site-packages .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -e '.[dev]'
+
+      - name: Lint (ruff)
+        run: |
+          source .venv/bin/activate
+          ruff check .
+
+      - name: Tests (pytest)
+        run: |
+          source .venv/bin/activate
+          pytest --junitxml=report.xml
+
+      - name: Publier le rapport de tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report
+          path: report.xml
