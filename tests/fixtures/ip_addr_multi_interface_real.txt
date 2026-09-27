@@ -1,0 +1,9 @@
+1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
+3: wlan0    inet 192.168.1.199/24 brd 192.168.1.255 scope global dynamic noprefixroute wlan0\       valid_lft 30801sec preferred_lft 30801sec
+4: tailscale0    inet 100.97.175.52/32 scope global tailscale0\       valid_lft forever preferred_lft forever
+5: br-edd4c4558a57    inet 172.22.0.1/16 brd 172.22.255.255 scope global br-edd4c4558a57\       valid_lft forever preferred_lft forever
+6: br-20245039a250    inet 172.18.0.1/16 brd 172.18.255.255 scope global br-20245039a250\       valid_lft forever preferred_lft forever
+7: br-5f3915bdbadc    inet 172.19.0.1/16 brd 172.19.255.255 scope global br-5f3915bdbadc\       valid_lft forever preferred_lft forever
+8: br-62af3a7b87bf    inet 172.21.0.1/16 brd 172.21.255.255 scope global br-62af3a7b87bf\       valid_lft forever preferred_lft forever
+9: docker0    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0\       valid_lft forever preferred_lft forever
+10: br-d6fea4c609b8    inet 172.20.0.1/16 brd 172.20.255.255 scope global br-d6fea4c609b8\       valid_lft forever preferred_lft forever

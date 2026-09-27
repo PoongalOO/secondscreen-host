@@ -42,6 +42,11 @@ REQUIRED_TOOLS: tuple[RequiredTool, ...] = (
         package_hint="x11vnc",
         reason="servir l'écran en VNC",
     ),
+    RequiredTool(
+        name="ip",
+        package_hint="iproute2",
+        reason="détecter l'adresse IP locale à afficher (HOST-050)",
+    ),
 )
 
 # Requis seulement pour le repli « écran isolé » (F03, HOST-030/HOST-031) :

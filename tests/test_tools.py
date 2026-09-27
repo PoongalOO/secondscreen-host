@@ -9,9 +9,9 @@ from secondscreen_host.pure.tools import (
 )
 
 
-def test_required_tools_cover_xrandr_cvt_x11vnc() -> None:
+def test_required_tools_cover_xrandr_cvt_x11vnc_ip() -> None:
     names = {tool.name for tool in REQUIRED_TOOLS}
-    assert names == {"xrandr", "cvt", "x11vnc"}
+    assert names == {"xrandr", "cvt", "x11vnc", "ip"}
 
 
 def test_tool_check_result_is_available() -> None:

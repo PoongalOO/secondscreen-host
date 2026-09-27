@@ -11,14 +11,14 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E2 — Écran virtuel étendu | 3/3 | 0 | 0 |
 | E3 — Repli : écran isolé | 2/2 | 0 | 0 |
 | E4 — Serveur VNC | 2/3 | 1 | 0 |
-| E5 — Informations de connexion | 0/1 | 0 | 1 |
+| E5 — Informations de connexion | 0/1 | 1 | 0 |
 | E6 — Persistance des réglages | 0/1 | 0 | 1 |
 | E7 — Interface GTK / UX | 0/3 | 0 | 3 |
 | E8 — Fiabilité | 0/2 | 0 | 2 |
 | E9 — Sécurité | 0/2 | 0 | 2 |
 | E10 — Tests et compatibilité | 0/4 | 0 | 4 |
 | E11 — Documentation et distribution | 0/3 | 0 | 3 |
-| **Total** | **12/29** | **1** | **16** |
+| **Total** | **12/29** | **2** | **15** |
 
 ## Epic E0 — Initialisation
 
@@ -100,7 +100,7 @@ Champ de saisie masqué (pas en clair à l'écran), jamais écrit sur disque (CA
 ### HOST-050 — Afficher IP/port/mot de passe copiables — P1
 Détection de l'adresse IP locale réelle (pas `127.0.0.1` ; gérer le cas de plusieurs interfaces réseau). Bouton « Copier » pour l'adresse et le port. Mot de passe masqué par défaut, révélable par l'utilisateur.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait pour la partie détection** — `pure/local_address.py` + `system/local_address.py`. Deux informations combinées : l'adresse que le système choisirait pour une connexion sortante (astuce socket UDP, aucune donnée réellement envoyée, aucun privilège requis) comme suggestion par défaut, et la liste de toutes les adresses IPv4 par interface (`ip -4 -o addr show`, nouvel outil ajouté à HOST-010) pour les cas à plusieurs interfaces. **Filtrage trouvé nécessaire en testant sur une vraie machine** : la machine de développement a une interface Wi-Fi normale, six ponts Docker et un VPN Tailscale — sans filtrer par nom d'interface, plusieurs adresses de ponts Docker (172.17-22.0.1, qui ressemblent à des adresses privées ordinaires) et l'adresse Tailscale auraient été proposées comme si elles étaient joignables depuis le réseau local, ce qui est faux. Fixture de test basée sur cette capture réelle plutôt qu'un exemple inventé. **Reste à faire (interface GTK, HOST-070)** : bouton « Copier », champ mot de passe masqué/révélable — F05 dans son ensemble suppose une fenêtre qui n'existe pas encore.
 
 ## Epic E6 — Persistance des réglages (F06)
 
