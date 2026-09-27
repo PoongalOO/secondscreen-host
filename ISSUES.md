@@ -10,7 +10,7 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E1 — Détection de l'environnement | 3/3 | 0 | 0 |
 | E2 — Écran virtuel étendu | 3/3 | 0 | 0 |
 | E3 — Repli : écran isolé | 2/2 | 0 | 0 |
-| E4 — Serveur VNC | 0/3 | 0 | 3 |
+| E4 — Serveur VNC | 2/3 | 1 | 0 |
 | E5 — Informations de connexion | 0/1 | 0 | 1 |
 | E6 — Persistance des réglages | 0/1 | 0 | 1 |
 | E7 — Interface GTK / UX | 0/3 | 0 | 3 |
@@ -18,7 +18,7 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E9 — Sécurité | 0/2 | 0 | 2 |
 | E10 — Tests et compatibilité | 0/4 | 0 | 4 |
 | E11 — Documentation et distribution | 0/3 | 0 | 3 |
-| **Total** | **10/29** | **0** | **19** |
+| **Total** | **12/29** | **1** | **16** |
 
 ## Epic E0 — Initialisation
 
@@ -83,17 +83,17 @@ Trouve un numéro d'affichage libre, lance `Xorg` avec la configuration (HOST-03
 ### HOST-040 — Construire la commande `x11vnc` — P0
 Fonction pure : assemble la commande selon le mode (étendu avec `--clip`, HOST-022 ; ou isolé sans, HOST-031), le port, le mot de passe. **Le mot de passe ne doit apparaître dans aucune représentation textuelle journalisable de la commande construite** (voir HOST-090) : à concevoir pour que ce soit structurellement impossible de l'oublier, pas seulement vérifié a posteriori.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `pure/x11vnc_command.py`. Le mot de passe n'est **jamais** un paramètre de cette fonction : elle prend le chemin d'un fichier de mot de passe déjà écrit, transmis via `-passwdfile rm:<chemin>` (jamais `-passwd`, qui l'exposerait en clair dans `ps(1)`). Le préfixe `rm:` fait supprimer le fichier par x11vnc lui-même après une seule lecture — comportement documenté (`x11vnc -help`) et vérifié en conditions réelles. Aucun mot de passe possible en argument par erreur : structurellement, pas seulement vérifié après coup.
 
 ### HOST-041 — Démarrer/arrêter x11vnc et suivre son état — P0
 Lance le processus, détecte le succès ou l'échec réel (pas seulement « la commande a été lancée » : lire sa sortie/erreur), bouton Démarrer/Arrêter dans l'interface. Aucun processus orphelin après arrêt (voir HOST-080).
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `system/x11vnc.py`. Démarrage confirmé par la ligne `PORT=<num>` que x11vnc affiche une fois qu'il écoute réellement (`pure/x11vnc_output.py`), jamais par un délai fixe supposé suffisant — distingue un succès (port réellement ouvert) d'un échec silencieux (port déjà utilisé : x11vnc s'arrête tout seul avec un message clair, sans jamais afficher `PORT=`). **Bug d'environnement réel trouvé et contourné** : x11vnc bufferise entièrement sa sortie standard tant qu'elle n'est pas un vrai terminal (comportement libc, pas un bogue x11vnc) — avec un simple tube, la ligne `PORT=` pouvait rester bloquée indéfiniment ; `stdbuf -oL` essayé sans effet ; résolu avec un pseudo-terminal (pty), qui force x11vnc à l'afficher immédiatement (vérifié). Un fil d'arrière-plan continue à lire le pty pendant toute la durée de vie du serveur (pas seulement au démarrage) pour éviter qu'un tampon plein ne bloque x11vnc en usage prolongé, en gardant les dernières lignes pour le diagnostic. **Vérifié avec un vrai `x11vnc` + `Xvfb`** : connexion TCP réelle qui reçoit la bannière du protocole RFB (`RFB 003.008\n`), arrêt propre, aucun processus orphelin.
 
 ### HOST-042 — Redemander le mot de passe à chaque démarrage — P0
 Champ de saisie masqué (pas en clair à l'écran), jamais écrit sur disque (CAHIER_DES_CHARGES.md, décision prise), effacé de la mémoire du processus dès que le serveur s'arrête — en notant explicitement la limite de Python sur ce point (une `str` n'est pas effaçable de façon garantie, contrairement au `CharArray` utilisé côté Android).
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait pour la partie détention/effacement** — `pure/secret.py::Secret` : le mot de passe transite par un `bytearray` mutable, mis à zéro (vérifié par un test qui inspecte les octets, pas seulement l'état) dès `clear()` — appelé automatiquement par `X11VncProcess.stop()` (HOST-041). Jamais écrit sur disque de façon persistante (voir HOST-040 : seulement un fichier temporaire supprimé par x11vnc lui-même). Limite documentée dans le code, pas ignorée : Python ne garantit pas l'effacement d'une `str` sous-jacente. **Reste à faire** : le champ de saisie masqué lui-même est une question d'interface GTK, qui n'existe pas encore — ce sera fait avec HOST-070.
 
 ## Epic E5 — Informations de connexion (F05)
 
