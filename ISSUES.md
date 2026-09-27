@@ -12,13 +12,13 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E3 — Repli : écran isolé | 2/2 | 0 | 0 |
 | E4 — Serveur VNC | 2/3 | 1 | 0 |
 | E5 — Informations de connexion | 0/1 | 1 | 0 |
-| E6 — Persistance des réglages | 0/1 | 0 | 1 |
+| E6 — Persistance des réglages | 1/1 | 0 | 0 |
 | E7 — Interface GTK / UX | 0/3 | 0 | 3 |
 | E8 — Fiabilité | 0/2 | 0 | 2 |
 | E9 — Sécurité | 0/2 | 0 | 2 |
 | E10 — Tests et compatibilité | 0/4 | 0 | 4 |
 | E11 — Documentation et distribution | 0/3 | 0 | 3 |
-| **Total** | **12/29** | **2** | **15** |
+| **Total** | **13/29** | **2** | **14** |
 
 ## Epic E0 — Initialisation
 
@@ -107,7 +107,7 @@ Détection de l'adresse IP locale réelle (pas `127.0.0.1` ; gérer le cas de pl
 ### HOST-060 — Mémoriser la sortie virtuelle choisie et le port — P2
 Fichier de configuration utilisateur (répertoire de configuration XDG). Ne mémorise jamais le mot de passe (voir HOST-042). Doit rester compatible avec une configuration matérielle qui change entre deux lancements (ne pas supposer qu'une sortie mémorisée existe toujours).
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `pure/settings.py` + `system/settings.py`. Fichier `$XDG_CONFIG_HOME/secondscreen-host/config.json` (repli `~/.config/...`), écriture atomique (fichier temporaire puis renommage) pour qu'un plantage en cours d'écriture ne laisse jamais un fichier à moitié écrit. Chargement défensif : fichier absent, JSON invalide, tronqué, ou avec des champs du mauvais type retombe silencieusement sur les valeurs par défaut plutôt que d'empêcher le démarrage — y compris le piège classique `{"port": true}` (`bool` est une sous-classe d'`int` en Python, gardé explicitement). `resolve_remembered_output` ne réutilise la sortie mémorisée que si elle existe encore parmi les sorties détectées (HOST-012) : jamais supposée valide après un changement de matériel. Aucun champ mot de passe possible : `Settings` n'en a structurellement pas, vérifié aussi par un test canari qui inspecte le fichier écrit sur disque.
 
 ## Epic E7 — Interface GTK / UX
 
