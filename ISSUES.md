@@ -8,7 +8,7 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 |---|---|---|---|
 | E0 — Initialisation | 2/2 | 0 | 0 |
 | E1 — Détection de l'environnement | 3/3 | 0 | 0 |
-| E2 — Écran virtuel étendu | 0/3 | 0 | 3 |
+| E2 — Écran virtuel étendu | 3/3 | 0 | 0 |
 | E3 — Repli : écran isolé | 0/2 | 0 | 2 |
 | E4 — Serveur VNC | 0/3 | 0 | 3 |
 | E5 — Informations de connexion | 0/1 | 0 | 1 |
@@ -18,7 +18,7 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E9 — Sécurité | 0/2 | 0 | 2 |
 | E10 — Tests et compatibilité | 0/4 | 0 | 4 |
 | E11 — Documentation et distribution | 0/3 | 0 | 3 |
-| **Total** | **5/29** | **0** | **24** |
+| **Total** | **8/29** | **0** | **21** |
 
 ## Epic E0 — Initialisation
 
@@ -54,17 +54,17 @@ Fonction pure (aucun appel système dans cette fonction elle-même) : écran pri
 ### HOST-020 — Construire les commandes `xrandr` — P0
 Fonction pure qui construit `--newmode`/`--addmode`/`--output ... --right-of` à partir du nom de sortie détecté (HOST-012) et de la ligne `Modeline` de `cvt`. Ne les exécute pas : seulement la construction, testable sans appel système.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `pure/cvt.py` (analyse de la sortie de `cvt`, fixture réellement capturée via `xcvt`, absent de la machine de développement) + `pure/xrandr_commands.py` (construit des `tuple[str, ...]`, jamais de chaîne shell — pas de risque d'injection). `system/cvt.py` pour l'appel réel.
 
 ### HOST-021 — Exécuter la configuration et relire la position assignée — P0
 Exécute les commandes réelles (HOST-020), puis relit `xrandr --query` pour connaître le `+X+Y` réellement assigné (jamais supposé ou recalculé à l'avance). Un échec à n'importe quelle étape doit être rapporté clairement, sans laisser le système dans un état à moitié configuré non signalé.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `system/xrandr_commands.py::configure_extended_screen` : exécute les trois commandes dans l'ordre, s'arrête et rapporte l'étape précise en cas d'échec (`ExtendedScreenConfigurationError.step`), relit `xrandr --query` après coup plutôt que de supposer la position. `system/extended_screen.py::setup_extended_screen` enchaîne le tout (cvt → commandes → relecture) en un seul point d'entrée pour l'interface (HOST-070). Testé avec de vrais `cvt`/`xrandr` sous Xvfb en plus des simulations d'échec par étape.
 
 ### HOST-022 — Calculer le rectangle `--clip` pour x11vnc — P0
 Fonction pure : combine largeur, hauteur et position (HOST-021) en la chaîne attendue par `x11vnc -clip`. Cas limites testés : position (0,0), grandes coordonnées, écran principal à droite au lieu de à gauche.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — `pure/clip.py`, prend directement l'`OutputGeometry` de HOST-012/HOST-021. Rejette une géométrie sans sens (taille ou position négative). Les 3 cas limites demandés sont couverts (voir `tests/test_clip.py`).
 
 ## Epic E3 — Repli : écran isolé (F03)
 
