@@ -16,9 +16,9 @@ Numérotation `HOST-xxx` (pour ne pas confondre avec les `SS-xxx` du projet Seco
 | E7 — Interface GTK / UX | 3/3 | 0 | 0 |
 | E8 — Fiabilité | 2/2 | 0 | 0 |
 | E9 — Sécurité | 2/2 | 0 | 0 |
-| E10 — Tests et compatibilité | 0/4 | 0 | 4 |
+| E10 — Tests et compatibilité | 1/4 | 0 | 3 |
 | E11 — Documentation et distribution | 0/3 | 0 | 3 |
-| **Total** | **22/29** | **0** | **7** |
+| **Total** | **23/29** | **0** | **6** |
 
 ## Epic E0 — Initialisation
 
@@ -155,7 +155,7 @@ Le champ mot de passe est obligatoire par défaut avant de pouvoir démarrer le 
 ### HOST-100 — Suite de tests de la logique pure — P0
 Rassemble et maintient les tests unitaires de HOST-012, HOST-020, HOST-022, HOST-030, HOST-040 : aucun ne doit dépendre d'un vrai serveur X, de GTK, ni d'un vrai `x11vnc`.
 
-**Statut : ⬜ À faire**
+**Statut : ✅ Fait** — Vérifié à la lettre, pas seulement par relecture : la suite complète (pas seulement les cinq issues citées) tourne dans un conteneur qui n'a **ni GTK, ni serveur X, ni `x11vnc`/`xrandr`/`cvt`/`ip` installés du tout** — `python:3.10-slim`, uniquement `pytest` et le projet. **Vrai bogue trouvé en le vérifiant** : `tests/test_main.py` (qui ne teste qu'une fonction pure, `self_test_requested`) faisait planter la *collecte* de tests entière — pas juste s'ignorer — à cause d'un `from secondscreen_host.ui.app import main` en tête de `secondscreen_host/__main__.py`, qui importait `gi` transitivement rien qu'en important le module pour cette seule fonction. Corrigé : cet import n'a lieu qu'à l'intérieur de `run()`, jamais au chargement du module. Un job CI dédié (`pure-tests-minimal-env`, `.github/workflows/ci.yml`) reproduit cette vérification à chaque push/pull request, pour que la séparation reste vraie dans la durée plutôt que vérifiée une seule fois.
 
 ### HOST-101 — Test sur PC Ubuntu réel — P0
 Écran étendu (F02) **et** repli isolé (F03), les deux, avec une vraie tablette SecondScreen qui se connecte au résultat.

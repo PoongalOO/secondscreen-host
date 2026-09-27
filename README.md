@@ -43,12 +43,23 @@ secondscreen-host
 pytest
 ```
 
-Les tests qui utilisent GTK (`tests/test_app.py`) ne testent que la construction de l'application, pas l'affichage réel d'une fenêtre (cela ne demande pas de serveur d'affichage — vérifié). Pour vérifier qu'une fenêtre s'affiche réellement, dans un environnement isolé qui ne touche pas l'affichage de la machine courante :
+Les tests qui utilisent GTK (`tests/test_app.py`, `tests/test_main_window.py`) ne testent que la construction de l'application, pas l'affichage réel d'une fenêtre (cela ne demande pas de serveur d'affichage — vérifié). Pour vérifier qu'une fenêtre s'affiche réellement, dans un environnement isolé qui ne touche pas l'affichage de la machine courante :
 
 ```bash
 ./scripts/gtk-smoke-test.sh          # ubuntu:22.04 par défaut
 ./scripts/gtk-smoke-test.sh debian:trixie
 ```
+
+La logique pure (`secondscreen_host/pure/`) ne dépend jamais de GTK, d'un vrai serveur X, ni d'un vrai `x11vnc`/`xrandr`/`cvt` (HOST-100) : la suite entière tourne (ou s'ignore proprement pour ce qui en a réellement besoin) dans un environnement qui n'a **aucun** de ces paquets installés, pas seulement une session sans affichage :
+
+```bash
+python3 -m venv .venv-minimal   # sans --system-site-packages : aucun accès à python3-gi
+.venv-minimal/bin/pip install pytest
+.venv-minimal/bin/pip install -e .
+.venv-minimal/bin/pytest -q
+```
+
+Vérifié par un job CI dédié (`.github/workflows/ci.yml`, job `pure-tests-minimal-env`), qui n'installe ni GTK ni aucun outil système : ça a déjà trouvé un vrai bogue une fois (un import GTK caché en tête de `secondscreen_host/__main__.py`, qui faisait planter la collecte de tests au lieu de l'ignorer proprement).
 
 ## Lint
 

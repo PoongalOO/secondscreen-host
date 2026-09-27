@@ -44,3 +44,38 @@ jobs:
         with:
           name: pytest-report
           path: report.xml
+
+  pure-tests-minimal-env:
+    # Garantit que la logique pure (HOST-012, HOST-020, HOST-022, HOST-030,
+    # HOST-040, et plus largement tout module `pure/`) ne dépend jamais
+    # d'un vrai serveur X, de GTK, ni d'un vrai x11vnc/xrandr/cvt (HOST-100) :
+    # aucun de ces paquets n'est installé dans ce job, volontairement, avec
+    # le Python isolé d'actions/setup-python plutôt que celui du système
+    # (ici, c'est justement l'absence de tout lien avec GTK qui est vérifiée,
+    # contrairement au job précédent).
+    #
+    # Les deux fichiers qui ont besoin de GTK pour s'importer
+    # (tests/test_app.py, tests/test_main_window.py) s'ignorent proprement
+    # (`pytest.importorskip`), et les tests qui ont besoin d'un vrai binaire
+    # système s'ignorent aussi proprement (`pytest.mark.skipif`) : ce job
+    # échoue si l'un de ces mécanismes de repli cesse de fonctionner — ce
+    # qui a déjà révélé un vrai bogue une fois (un import GTK caché en tête
+    # de `secondscreen_host/__main__.py`, qui faisait planter la collecte
+    # de test au lieu de l'ignorer).
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Installer uniquement pytest et le projet (aucun paquet GTK/X11)
+        run: |
+          pip install --upgrade pip
+          pip install pytest
+          pip install -e .
+
+      - name: Tests, sans GTK ni serveur X ni x11vnc/xrandr/cvt installés
+        run: pytest -q
